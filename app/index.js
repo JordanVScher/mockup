@@ -37,19 +37,24 @@ bot.onEvent(async (context) => {
 			await context.typingOn();
 			const payload = await context.event.message.text.replace(/([\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2694-\u2697]|\uD83E[\uDD10-\uDD5D])/g, '');
 			if (payload) { // check if string isn't empty after removing emojis
-				if (context.event.message.text === process.env.RESTART) {
-					await context.resetState();
-					await context.setState({ dialog: 'greetings' });
+				if (context.state.dialog !== 'wantToSend') {
+					if (context.event.message.text === process.env.RESTART) {
+						await context.resetState();
+						await context.setState({ dialog: 'greetings' });
+					} else {
+						await context.setState({ userText: context.event.message.text });
+						await context.setState({
+							apiaiIntent: await app.textRequest(payload, {
+								sessionId: context.session.user.id,
+							}),
+						});
+						// console.log(context.state.apiaiIntent);
+						// await context.sendText(`Você quer saber sobre: ${context.state.apiaiIntent.result.metadata.intentName}`);
+						await context.setState({ dialog: context.state.apiaiIntent.result.metadata.intentName });
+					}
 				} else {
-					await context.setState({ userText: context.event.message.text });
-					await context.setState({
-						apiaiIntent: await app.textRequest(payload, {
-							sessionId: context.session.user.id,
-						}),
-					});
-					// console.log(context.state.apiaiIntent);
-					// await context.sendText(`Você quer saber sobre: ${context.state.apiaiIntent.result.metadata.intentName}`);
-					await context.setState({ dialog: context.state.apiaiIntent.result.metadata.intentName });
+					await context.sendText('Ok, enviei sua mensagem.');
+					await context.setState({ dialog: 'mainMenu' });
 				}
 			} else {
 				await context.sendText('Texto inválido');
@@ -112,13 +117,15 @@ bot.onEvent(async (context) => {
 			// falls through
 		case 'corrupcao':
 			// falls through
-
 		case 'findQuestions':
 			await context.typingOn();
 			await context.setState({ theme: context.state.dialog });
 			await context.sendText(`Parece que você quer saber sobre ${context.state.theme}.\nQual é a sua pergunta?`);
 			await attach.sendCarousel(context, flow.questions[context.state.theme]);
 			await context.typingOff();
+			break;
+		case 'wantToSend':
+			await context.sendText('Quer nós mandar uma mensagem? Escreva-a abaixo:');
 			break;
 		case 'mistake':
 			await context.setState({ theme: undefined });
