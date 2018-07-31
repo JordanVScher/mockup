@@ -8,6 +8,7 @@ const apiai = require('apiai-promise');
 
 const config = require('./bottender.config').messenger;
 const flow = require('./flow');
+const attach = require('./attach');
 
 const app = apiai(process.env.DIALOGFLOW_TOKEN);
 
@@ -23,7 +24,12 @@ bot.onEvent(async (context) => {
 	if (!context.event.isDelivery && !context.event.isEcho && !context.event.isRead) {
 		if (context.event.isPostback) {
 			const { payload } = context.event.postback;
-			await context.setState({ dialog: payload });
+			if (payload.slice(0, 4) === 'answer' || context.state.theme) {
+				await context.setState({ answer: flow.answer[context.state.theme][payload.slice(-1)] });
+				await context.setState({ dialog: 'showAnswer' });
+			} else {
+				await context.setState({ dialog: payload });
+			}
 		} else if (context.event.isQuickReply) {
 			const { payload } = context.event.quickReply;
 			await context.setState({ dialog: payload });
@@ -76,7 +82,7 @@ bot.onEvent(async (context) => {
 					{
 						content_type: 'text',
 						title: 'Sim',
-						payload: 'answer',
+						payload: 'answer1',
 					},
 					{
 						content_type: 'text',
@@ -86,12 +92,36 @@ bot.onEvent(async (context) => {
 				],
 			});
 			break;
-		case 'answer':
+		case 'showAnswer':
+			await context.sendText('O político diz:');
+			await context.sendText(context.state.answer);
+			await context.sendText('Mais alguma dúvida? Pode me perguntar!');
+			break;
+		case 'answer1':
 			await context.sendText('O político diz:');
 			await context.sendText(flow.answer[context.state.theme]);
 			await context.sendText('Mais alguma dúvida? Pode me perguntar!');
 			break;
+		case 'seguranca':
+			// falls through
+		case 'saude':
+			// falls through
+		case 'transporte':
+			// falls through
+		case 'educacao':
+			// falls through
+		case 'corrupcao':
+			// falls through
+
+		case 'findQuestions':
+			await context.typingOn();
+			await context.setState({ theme: context.state.dialog });
+			await context.sendText(`Parece que você quer saber sobre ${context.state.theme}.\nQual é a sua pergunta?`);
+			await attach.sendCarousel(context, flow.questions[context.state.theme]);
+			await context.typingOff();
+			break;
 		case 'mistake':
+			await context.setState({ theme: undefined });
 			await context.sendText('Parece que eu me enganei. Quer tentar de novo ou prefere mandar a pergunta para nossa equipe?', {
 				quick_replies: [
 					{
