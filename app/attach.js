@@ -77,6 +77,7 @@ async function sendCarousel(context, content) {
 			}],
 		});
 	});
+
 	await context.sendAttachment({
 		type: 'template',
 		payload: {

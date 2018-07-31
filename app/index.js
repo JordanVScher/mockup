@@ -3,34 +3,10 @@ require('dotenv').config();
 const { MessengerBot, FileSessionStore } = require('bottender');
 const { createServer } = require('bottender/restify');
 const apiai = require('apiai-promise');
-const GoogleSpreadsheet = require('google-spreadsheet');
-const async = require('async');
-
-
-// const privatekey = require('./private_key.json');
-
-const { google } = require('googleapis');
-
-// let jwtClient;
-// async function authJWT() {
-// 	// configure a JWT auth client
-// 	jwtClient = await new google.auth.JWT(
-// 		privatekey.client_email,
-// 		null,
-// 		privatekey.private_key,
-// 		['https://www.googleapis.com/auth/spreadsheets',
-// 			'https://www.googleapis.com/auth/drive'] // eslint-disable-line comma-dangle
-// 	);
-// 	// authenticate request
-// 	await jwtClient.authorize((err, tokens) => {
-// 		if (err) {
-// 			console.log('Error at connection => ', err);
-// 		} else {
-// 			console.log('Token =>', tokens);
-// 			console.log('Successfully connected!');
-// 		}
-// 	});
-// }
+// const GoogleSpreadsheet = require('google-spreadsheet');
+// const async = require('async');
+// const privatekey = require('../private_key.json');
+// const { google } = require('googleapis');
 
 
 // const postback = require('./postback');
@@ -52,20 +28,30 @@ bot.onEvent(async (context) => {
 	if (!context.event.isDelivery && !context.event.isEcho && !context.event.isRead) {
 		if (context.event.isPostback) {
 			const { payload } = context.event.postback;
-			if (payload.slice(0, 4) === 'answer' || context.state.theme) {
-				await context.setState({ answer: flow.answer[context.state.theme][payload.slice(-1)] });
+			if (payload.slice(0, 6) === 'answer') {
+				await context.setState({ answer: flow[context.state.politician].answer[context.state.theme][payload.slice(-1)] });
 				await context.setState({ dialog: 'showAnswer' });
 			} else {
 				await context.setState({ dialog: payload });
 			}
 		} else if (context.event.isQuickReply) {
 			const { payload } = context.event.quickReply;
+			if (payload.includes('choosePolitician')) {
+				if (payload.slice(-1) === '1') {
+					await context.setState({ politician: 'Huck' });
+				} else {
+					await context.setState({ politician: 'Justus' });
+				}
+			}
 			await context.setState({ dialog: payload });
 		} else if (context.event.isText) {
 			await context.typingOn();
 			const payload = await context.event.message.text.replace(/([\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2694-\u2697]|\uD83E[\uDD10-\uDD5D])/g, '');
 			if (payload) { // check if string isn't empty after removing emojis
-				if (context.state.dialog !== 'wantToSend') {
+				if (!context.state.politician) {
+					await context.sendText('Escolha um político antes!');
+					await context.setState({ dialog: 'askPolitician' });
+				} else if (context.state.dialog !== 'wantToSend') {
 					if (context.event.message.text === process.env.RESTART) {
 						await context.resetState();
 						await context.setState({ dialog: 'greetings' });
@@ -94,10 +80,35 @@ bot.onEvent(async (context) => {
 	if (context.state.dialog) {
 		switch (context.state.dialog) {
 		case 'greetings':
+			await context.resetState();
 			await context.sendText('Olá, sou o assistente virtual do Mock-Up.');
-			await context.sendText('Mande-me uma pergunta sobre o político que eu tentarei te responder!');
+		// falls through
+		case 'askPolitician':
+			await context.sendText('Sobre qual político você deseja saber mais?', {
+				quick_replies: [
+					{
+						content_type: 'text',
+						title: 'Huck',
+						payload: 'choosePolitician1',
+					},
+					{
+						content_type: 'text',
+						title: 'Justus',
+						payload: 'choosePolitician2',
+					},
+				],
+			});
+			break;
+		case 'choosePolitician1':
+			// falls through
+		case 'choosePolitician2':
+			// falls through
+		case 'choosePolitician':
+			await context.sendText(`Você escolheu ${context.state.politician}`);
+			await context.sendText('Digite sua dúvida que eu vou tentar te responder');
 			break;
 		case 'mainMenu':
+			await context.setState({ theme: undefined });
 			await context.typingOff();
 			await context.sendText('Mais alguma dúvida? Pode me perguntar!');
 			break;
@@ -115,7 +126,7 @@ bot.onEvent(async (context) => {
 					{
 						content_type: 'text',
 						title: 'Sim',
-						payload: 'answer1',
+						payload: 'abortoYes',
 					},
 					{
 						content_type: 'text',
@@ -126,13 +137,13 @@ bot.onEvent(async (context) => {
 			});
 			break;
 		case 'showAnswer':
-			await context.sendText('O político diz:');
+			await context.sendText(`O ${context.state.politician} diz:`);
 			await context.sendText(context.state.answer);
 			await context.sendText('Mais alguma dúvida? Pode me perguntar!');
 			break;
-		case 'answer1':
-			await context.sendText('O político diz:');
-			await context.sendText(flow.answer[context.state.theme]);
+		case 'abortoYes':
+			await context.sendText(`O ${context.state.politician} diz:`);
+			await context.sendText(flow[context.state.politician].answer[context.state.theme]);
 			await context.sendText('Mais alguma dúvida? Pode me perguntar!');
 			break;
 		case 'seguranca':
@@ -149,7 +160,7 @@ bot.onEvent(async (context) => {
 			await context.typingOn();
 			await context.setState({ theme: context.state.dialog });
 			await context.sendText(`Parece que você quer saber sobre ${context.state.theme}.\nQual é a sua pergunta?`);
-			await attach.sendCarousel(context, flow.questions[context.state.theme]);
+			await attach.sendCarousel(context, flow[context.state.politician].questions[context.state.theme]);
 			await context.typingOff();
 			break;
 		case 'wantToSend':

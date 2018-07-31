@@ -66,4 +66,4 @@ run-container.sh
 
 .sessions
 .eslintrc.json
-./private_key.json
+private_key.json
