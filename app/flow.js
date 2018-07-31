@@ -6,12 +6,12 @@ module.exports = {
 		getStarted: 'Sou o assistente virtual Mock-Up. Clique em \'Começar\' para falar comigo!',
 	},
 	answer: {
-		aborto: 'Sou 100% a favor.',
-		seguranca: ['Sou contra o armamento', 'Sou contra a prisão de menores', 'Vou lutar em favor da pena de morte'],
-		saude: ['Não, chega de hospital gratuito.', 'SUS já era.', 'Sim, remédios de graça pra todos.'],
+		aborto: 'Sou 100% contra.',
+		seguranca: ['Sou contra o armamento', 'Sou contra a prisão de menores', 'Vou lutar contra da pena de morte'],
+		saude: ['Sim, vamos trazer mais hospitais gratuitos.', 'SUS pra sempre.', 'Sim, remédios de graça pra todos.'],
 		transporte: ['Nunca vamos acabar o monotrilho.', 'Sim, as obras precisam desse fundo.'],
-		educacao: ['Totalmente contra.', 'Não, enem não vale de nada.'],
-		corrupcao: ['Em time que tá ganhando não se mexe', 'Não, que isso, imagina.'],
+		educacao: ['Totalmente a favor.', 'Não, enem não vale de nada.'],
+		corrupcao: ['Todas.', 'Não.'],
 	},
 	questions: {
 		seguranca: ['Você é a favor do armamento?', 'Você é a favor da prisão de menores?', 'Você vai liberar a pena de morte?'],
