@@ -15,7 +15,28 @@ const bot = new MessengerBot({
 
 bot.onEvent(async (context) => {
 	if (!context.event.isDelivery && !context.event.isEcho && !context.event.isRead) {
-		await context.sendText('Hello World');
+		if (context.event.isPostback) {
+			const { payload } = context.event.postback;
+			await context.setState({ dialog: payload });
+		} else if (context.event.isQuickReply) {
+			const { payload } = context.event.quickReply;
+			await context.setState({ dialog: payload });
+		} else if (context.event.isText) {
+			await context.sendText('Não sei');
+			await context.setState({ dialog: 'mainMenu' });
+		}
+	}
+
+	if (context.state.dialog) {
+		switch (context.state.dialog) {
+		case 'greetings':
+			await context.sendText('Olá, sou o assistente virtual do Mock-Up.');
+			await context.sendText('Mande-me uma pergunta sobre o político que eu tentarei te responder!');
+			break;
+		case 'mainMenu':
+			await context.sendText('Mais alguma dúvida? Pode me perguntar!');
+			break;
+		}
 	}
 });
 
