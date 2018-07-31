@@ -5,4 +5,7 @@ module.exports = {
 		welcome: 'Olá, sou o assistente virtual Mock-Up. Clique em \'Começar\' para falar comigo!',
 		getStarted: 'Sou o assistente virtual Mock-Up. Clique em \'Começar\' para falar comigo!',
 	},
+	answer: {
+		aborto: 'Sou 100% a favor.',
+	},
 };

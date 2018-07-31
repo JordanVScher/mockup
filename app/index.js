@@ -7,6 +7,7 @@ const apiai = require('apiai-promise');
 // const postback = require('./postback');
 
 const config = require('./bottender.config').messenger;
+const flow = require('./flow');
 
 const app = apiai(process.env.DIALOGFLOW_TOKEN);
 
@@ -40,7 +41,7 @@ bot.onEvent(async (context) => {
 							sessionId: context.session.user.id,
 						}),
 					});
-					console.log(context.state.apiaiIntent);
+					// console.log(context.state.apiaiIntent);
 					// await context.sendText(`Você quer saber sobre: ${context.state.apiaiIntent.result.metadata.intentName}`);
 					await context.setState({ dialog: context.state.apiaiIntent.result.metadata.intentName });
 				}
@@ -67,6 +68,44 @@ bot.onEvent(async (context) => {
 		case 'sendTeam':
 			await context.sendText('ok, enviei sua mensagem para nossa equipe! Vamos te responder em breve!');
 			await context.sendText('Mais alguma dúvida? Pode me perguntar!');
+			break;
+		case 'aborto':
+			await context.setState({ theme: context.state.dialog });
+			await context.sendText('Você está querendo saber o que o político pensa sobre o aborto?', {
+				quick_replies: [
+					{
+						content_type: 'text',
+						title: 'Sim',
+						payload: 'answer',
+					},
+					{
+						content_type: 'text',
+						title: 'Não',
+						payload: 'mistake',
+					},
+				],
+			});
+			break;
+		case 'answer':
+			await context.sendText('O político diz:');
+			await context.sendText(flow.answer[context.state.theme]);
+			await context.sendText('Mais alguma dúvida? Pode me perguntar!');
+			break;
+		case 'mistake':
+			await context.sendText('Parece que eu me enganei. Quer tentar de novo ou prefere mandar a pergunta para nossa equipe?', {
+				quick_replies: [
+					{
+						content_type: 'text',
+						title: 'Tentar de novo',
+						payload: 'tryAgain',
+					},
+					{
+						content_type: 'text',
+						title: 'Mandar para equipe',
+						payload: 'sendTeam',
+					},
+				],
+			});
 			break;
 		case 'error':
 			await context.sendText('hmmm, não entendi o que você disse. Quer tentar de novo ou prefere mandar a pergunta para nossa equipe?', {
