@@ -41,8 +41,8 @@ bot.onEvent(async (context) => {
 						}),
 					});
 					console.log(context.state.apiaiIntent);
-					await context.sendText(`Você quer saber sobre: ${context.state.apiaiIntent.result.metadata.intentName}`);
-					await context.setState({ dialog: 'mainMenu' });
+					// await context.sendText(`Você quer saber sobre: ${context.state.apiaiIntent.result.metadata.intentName}`);
+					await context.setState({ dialog: context.state.apiaiIntent.result.metadata.intentName });
 				}
 			} else {
 				await context.sendText('Texto inválido');
@@ -60,6 +60,29 @@ bot.onEvent(async (context) => {
 		case 'mainMenu':
 			await context.typingOff();
 			await context.sendText('Mais alguma dúvida? Pode me perguntar!');
+			break;
+		case 'tryAgain':
+			await context.sendText('Envie sua pergunta!');
+			break;
+		case 'sendTeam':
+			await context.sendText('ok, enviei sua mensagem para nossa equipe! Vamos te responder em breve!');
+			await context.sendText('Mais alguma dúvida? Pode me perguntar!');
+			break;
+		case 'error':
+			await context.sendText('hmmm, não entendi o que você disse. Quer tentar de novo ou prefere mandar a pergunta para nossa equipe?', {
+				quick_replies: [
+					{
+						content_type: 'text',
+						title: 'Tentar de novo',
+						payload: 'tryAgain',
+					},
+					{
+						content_type: 'text',
+						title: 'Mandar para equipe',
+						payload: 'sendTeam',
+					},
+				],
+			});
 			break;
 		}
 	}
