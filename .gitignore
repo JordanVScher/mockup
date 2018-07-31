@@ -61,3 +61,8 @@ typings/
 
 # dotenv environment variables file
 .env
+
+run-container.sh
+
+.sessions
+.eslintrc.json
