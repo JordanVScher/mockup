@@ -3,9 +3,37 @@ require('dotenv').config();
 const { MessengerBot, FileSessionStore } = require('bottender');
 const { createServer } = require('bottender/restify');
 const apiai = require('apiai-promise');
+const GoogleSpreadsheet = require('google-spreadsheet');
+const async = require('async');
+
+
+// const privatekey = require('./private_key.json');
+
+const { google } = require('googleapis');
+
+// let jwtClient;
+// async function authJWT() {
+// 	// configure a JWT auth client
+// 	jwtClient = await new google.auth.JWT(
+// 		privatekey.client_email,
+// 		null,
+// 		privatekey.private_key,
+// 		['https://www.googleapis.com/auth/spreadsheets',
+// 			'https://www.googleapis.com/auth/drive'] // eslint-disable-line comma-dangle
+// 	);
+// 	// authenticate request
+// 	await jwtClient.authorize((err, tokens) => {
+// 		if (err) {
+// 			console.log('Error at connection => ', err);
+// 		} else {
+// 			console.log('Token =>', tokens);
+// 			console.log('Successfully connected!');
+// 		}
+// 	});
+// }
+
 
 // const postback = require('./postback');
-
 const config = require('./bottender.config').messenger;
 const flow = require('./flow');
 const attach = require('./attach');
