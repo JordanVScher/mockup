@@ -2,9 +2,14 @@ require('dotenv').config();
 
 const { MessengerBot, FileSessionStore } = require('bottender');
 const { createServer } = require('bottender/restify');
+const apiai = require('apiai-promise');
 
 // const postback = require('./postback');
+
 const config = require('./bottender.config').messenger;
+
+const app = apiai(process.env.DIALOGFLOW_TOKEN);
+
 
 const bot = new MessengerBot({
 	accessToken: config.accessToken,
@@ -22,8 +27,27 @@ bot.onEvent(async (context) => {
 			const { payload } = context.event.quickReply;
 			await context.setState({ dialog: payload });
 		} else if (context.event.isText) {
-			await context.sendText('Não sei');
-			await context.setState({ dialog: 'mainMenu' });
+			await context.typingOn();
+			const payload = await context.event.message.text.replace(/([\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2694-\u2697]|\uD83E[\uDD10-\uDD5D])/g, '');
+			if (payload) { // check if string isn't empty after removing emojis
+				if (context.event.message.text === process.env.RESTART) {
+					await context.resetState();
+					await context.setState({ dialog: 'greetings' });
+				} else {
+					await context.setState({ userText: context.event.message.text });
+					await context.setState({
+						apiaiIntent: await app.textRequest(payload, {
+							sessionId: context.session.user.id,
+						}),
+					});
+					console.log(context.state.apiaiIntent);
+					await context.sendText(`Você quer saber sobre: ${context.state.apiaiIntent.result.metadata.intentName}`);
+					await context.setState({ dialog: 'mainMenu' });
+				}
+			} else {
+				await context.sendText('Texto inválido');
+				await context.setState({ dialog: 'mainMenu' });
+			}
 		}
 	}
 
@@ -34,6 +58,7 @@ bot.onEvent(async (context) => {
 			await context.sendText('Mande-me uma pergunta sobre o político que eu tentarei te responder!');
 			break;
 		case 'mainMenu':
+			await context.typingOff();
 			await context.sendText('Mais alguma dúvida? Pode me perguntar!');
 			break;
 		}
