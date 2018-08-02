@@ -8,11 +8,8 @@
   },
   "dependencies": {
     "apiai-promise": "^1.0.0",
-    "async": "^2.6.1",
     "bottender": "0.15.1",
     "dotenv": "^6.0.0",
-    "google-spreadsheet": "^2.0.5",
-    "googleapis": "^32.0.0",
     "nodemon": "1.18.3",
     "request": "^2.87.0"
   },
